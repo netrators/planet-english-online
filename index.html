@@ -103,7 +103,12 @@
                     { id: 'p3_2', label: '2. If I ________ more free time, I could go out more and relax.' },
                     { id: 'p3_3', label: '3. My parents wish they ________ the lottery.' },
                     { id: 'p3_4', label: '4. If I had more money, I would ________ a vacation more often.' },
-                    { id: 'p3_5', label: '5. If I ________ taller, I\'d play basketball regularly.' }
+                    { id: 'p3_5', label: '5. If I ________ taller, I\'d play basketball regularly.' },
+                    { id: 'p3_6', label: '6. If I could save enough money, I ________ to a new apartment.' },
+                    { id: 'p3_7', label: '7. I wish I ________ abroad soon, so I can see the most important tourist attractions.' },
+                    { id: 'p3_8', label: '8. It would be great if I ________ my soul mate.' },
+                    { id: 'p3_9', label: '9. I wish I ________ a promotion.' },
+                    { id: 'p3_10', label: '10. If I ________ a better car, I wouldn\'t be always worried while driving.' }
                 ]
             },
             {
@@ -113,7 +118,9 @@
                 questions: [
                     { id: 'p4_1', label: '1. I am alone.' },
                     { id: 'p4_2', label: '2. I can\'t sing.' },
-                    { id: 'p4_3', label: '3. I\'m always busy.' }
+                    { id: 'p4_3', label: '3. I\'m always busy.' },
+                    { id: 'p4_4', label: '4. I need more money.' },
+                    { id: 'p4_5', label: '5. My car is very slow.' }
                 ]
             },
             {
@@ -123,7 +130,9 @@
                 questions: [
                     { id: 'p5_1', label: '1. What would you do if you won the lottery?' },
                     { id: 'p5_2', label: '2. What would you do if you were famous?' },
-                    { id: 'p5_3', label: '3. What would you do if you had more free time?' }
+                    { id: 'p5_3', label: '3. What would you do if you had more free time?' },
+                    { id: 'p5_4', label: '4. If you could travel abroad, where would you go?' },
+                    { id: 'p5_5', label: '5. If you didn\'t have class today, what would you do?' }
                 ]
             }
         ];
@@ -456,7 +465,7 @@
 
                                 // --- 🧩 RENDERIZADO ESPECIAL DEL CRUCIGRAMA 🧩 ---
                                 if (section.type === 'crossword') {
-                                    // 1. Mapear celdas ocupadas
+                                    // 1. Mapear celdas ocupadas de manera segura
                                     let gridMap = {};
                                     section.cwWords.forEach(w => {
                                         for(let i=0; i<w.text.length; i++){
@@ -481,11 +490,20 @@
                                     keys.forEach(key => {
                                         let [r, c] = key.split('_');
                                         let cell = gridMap[key];
-                                        let firstWordId = cell.words;
+                                        
+                                        // SAFEGUARD: Verificar que la celda tenga datos válidos
+                                        if(!cell || !cell.words || cell.words.length === 0) return;
+
+                                        let firstWordId = cell.words; // FIX CRÍTICO: Debe ser el elemento del array para tener el string ID.
                                         let firstWordDef = section.cwWords.find(w => w.id === firstWordId);
-                                        let charIndex = firstWordDef.dir === 'A' ? c - firstWordDef.col : r - firstWordDef.row;
-                                        let submittedWord = appState.answers[firstWordId] || '';
-                                        let val = submittedWord[charIndex] || '';
+                                        
+                                        // SAFEGUARD: Verificar que la definición de la palabra exista
+                                        let val = '';
+                                        if (firstWordDef) {
+                                            let charIndex = firstWordDef.dir === 'A' ? c - firstWordDef.col : r - firstWordDef.row;
+                                            let submittedWord = appState.answers[firstWordId] || '';
+                                            val = submittedWord[charIndex] || '';
+                                        }
 
                                         gridHtml += `
                                             <div style="grid-row: ${r}; grid-column: ${c};" class="relative bg-white border border-gray-200">
@@ -507,7 +525,10 @@
                                             </h4>
                                             <div class="space-y-4">`;
                                         
-                                        let dirClues = section.cwWords.filter(w => w.dir === dir);
+                                        // FIX CRÍTICO: Usar charAt(0) para comparar 'A' o 'D'
+                                        let dirLetter = dir.charAt(0);
+                                        let dirClues = section.cwWords.filter(w => w.dir === dirLetter); 
+                                        
                                         dirClues.forEach(clue => {
                                             let fb = appState.feedback[clue.id] || {};
                                             let isC = fb.correct === true;
