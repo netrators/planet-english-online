@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planet English - Digital Worksheet</title>
+    
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome para los íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Configuración de Colores Institucionales Planet English -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#e6ebf2',
+                            100: '#ccd8e6',
+                            500: '#1a4b8c',
+                            700: '#0d2b59',
+                            800: '#081c3d',
+                            900: '#001533', // Azul Marino Profundo Planet English
+                        },
+                        gold: {
+                            500: '#eab308', // Dorado para acentos
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 antialiased min-h-screen">
+
+    <!-- Contenedor Principal de la App -->
+    <div id="app"></div>
+
+    <script>
+        // ==========================================
+        // 1. BASE DE DATOS LOCAL (Simulada)
+        // ==========================================
+        const DB_KEY = 'planet_english_db';
+        const TEACHER_PIN = '12345';
+
+        function getDB() {
+            return JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        }
+
+        function saveDB(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        function generateCode() {
+            return Math.random().toString(36).substring(2, 7).toUpperCase();
+        }
+
+        // ==========================================
+        // 2. DATOS DE LA WORKSHEET (Con Intersecciones Reales del Crucigrama)
+        // ==========================================
+        const worksheetData = [
+            {
+                id: 'part1',
+                type: 'crossword',
+                title: 'I. COMPLETE THE CROSSWORD PUZZLE.',
+                subtitle: '(Fill in the grid based on the clues below)',
+                cwWords: [
+                    // Coordenadas calculadas para que las letras coincidan exactamente
+                    { id: 'p1_a1', dir: 'A', num: 1, row: 4, col: 1, text: 'CARELESS', clue: 'A person who is negligent' },
+                    { id: 'p1_a4', dir: 'A', num: 4, row: 2, col: 3, text: 'ANNOYED', clue: 'A person that feels irritated' },
+                    { id: 'p1_a5', dir: 'A', num: 5, row: 10, col: 7, text: 'SERIOUS', clue: 'A person who rarely smiles' },
+                    { id: 'p1_a7', dir: 'A', num: 7, row: 5, col: 10, text: 'NERVOUS', clue: 'A person who is anxious' },
+                    { id: 'p1_a8', dir: 'A', num: 8, row: 8, col: 6, text: 'BUSY', clue: 'A person who has a lot of things to do' },
+                    
+                    { id: 'p1_d2', dir: 'D', num: 2, row: 4, col: 8, text: 'STRESSED', clue: 'A person who has a lot of stress' },
+                    { id: 'p1_d3', dir: 'D', num: 3, row: 1, col: 4, text: 'INDEPENDENT', clue: "A person that doesn't depend on other people" },
+                    { id: 'p1_d4', dir: 'D', num: 4, row: 4, col: 2, text: 'ADVENTUROUS', clue: 'A person who likes adventure' },
+                    { id: 'p1_d6', dir: 'D', num: 6, row: 4, col: 10, text: 'INTELLIGENT', clue: 'A person who is smart' }
+                ]
+            },
+            {
+                id: 'part2',
+                type: 'standard',
+                title: "II. READ THE SITUATIONS. WRITE SENTENCES USING MUST, CAN'T, MIGHT, MAY OR COULD.",
+                questions: [
+                    { id: 'p2_1', label: '1. Julia is late for the meeting.' },
+                    { id: 'p2_2', label: '2. Henry hardly ever goes out with his friends.' },
+                    { id: 'p2_3', label: '3. It\'s very cloudy today.' },
+                    { id: 'p2_4', label: '4. Daniel never asks for help and he always works alone.' },
+                    { id: 'p2_5', label: '5. She always gets excellent grades in school.' }
+                ]
+            },
+            {
+                id: 'part3',
+                type: 'standard',
+                title: 'III. COMPLETE EACH SENTENCE WITH ONE OF THE VERBS...',
+                subtitle: 'Verbs: meet, have, win, buy, take, be, move, travel, find, get',
+                questions: [
+                    { id: 'p3_1', label: '1. Lyla wishes she ________ new people.' },
+                    { id: 'p3_2', label: '2. If I ________ more free time, I could go out more and relax.' },
+                    { id: 'p3_3', label: '3. My parents wish they ________ the lottery.' },
+                    { id: 'p3_4', label: '4. If I had more money, I would ________ a vacation more often.' },
+                    { id: 'p3_5', label: '5. If I ________ taller, I\'d play basketball regularly.' }
+                ]
+            },
+            {
+                id: 'part4',
+                type: 'standard',
+                title: 'IV. WRITE A WISH FOR EACH IDEA.',
+                questions: [
+                    { id: 'p4_1', label: '1. I am alone.' },
+                    { id: 'p4_2', label: '2. I can\'t sing.' },
+                    { id: 'p4_3', label: '3. I\'m always busy.' }
+                ]
+            },
+            {
+                id: 'part5',
+                type: 'standard',
+                title: 'V. ANSWER THE QUESTIONS.',
+                questions: [
+                    { id: 'p5_1', label: '1. What would you do if you won the lottery?' },
+                    { id: 'p5_2', label: '2. What would you do if you were famous?' },
+                    { id: 'p5_3', label: '3. What would you do if you had more free time?' }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // 3. ESTADO GLOBAL DE LA APP
+        // ==========================================
+        let appState = {
+            view: 'home', 
+            role: null, 
+            currentCode: null,
+            studentName: '',
+            answers: {},
+            feedback: {},
+            status: 'new',
+            errorMsg: ''
+        };
+
+        // ==========================================
+        // 4. LÓGICA DE CONTROLADORES
+        // ==========================================
+        function setView(view, role = appState.role) {
+            appState.view = view;
+            appState.role = role;
+            appState.errorMsg = '';
+            render();
+        }
+
+        function loadSubmission(code, role) {
+            const db = getDB();
+            const record = db[code.toUpperCase()];
+            
+            if (record) {
+                appState.currentCode = code.toUpperCase();
+                appState.studentName = record.studentName;
+                appState.answers = record.answers || {};
+                appState.feedback = record.feedback || {};
+                appState.status = record.status;
+                setView('worksheet', role);
+            } else {
+                appState.errorMsg = 'Código no encontrado. Verifica y vuelve a intentar.';
+                render();
+            }
+        }
+
+        function teacherLogin() {
+            const pinInput = document.getElementById('teacherPin').value;
+            if (pinInput === TEACHER_PIN) {
+                setView('teacherPanel', 'teacher');
+            } else {
+                appState.errorMsg = 'PIN incorrecto. (Usa 12345 para la demo)';
+                render();
+            }
+        }
+
+        // Auto-focus para la cuadrícula del crucigrama
+        function handleCwInput(elem, ev) {
+            if (ev.key.length === 1 && /[a-zA-Z]/.test(ev.key)) {
+                let inputs = Array.from(document.querySelectorAll('.cw-cell'));
+                let idx = inputs.indexOf(elem);
+                if(idx > -1 && idx < inputs.length - 1) inputs[idx+1].focus();
+            } else if (ev.key === 'Backspace') {
+                if (elem.value === '') {
+                    let inputs = Array.from(document.querySelectorAll('.cw-cell'));
+                    let idx = inputs.indexOf(elem);
+                    if(idx > 0) inputs[idx-1].focus();
+                }
+            }
+        }
+
+        function submitStudentWork() {
+            const nameInput = document.getElementById('studentName').value;
+            if (!nameInput.trim()) {
+                alert("Por favor, escribe tu nombre antes de enviar.");
+                return;
+            }
+
+            let newAnswers = {};
+
+            // 1. Recolectar inputs de preguntas estándar
+            document.querySelectorAll('.student-answer').forEach(input => {
+                newAnswers[input.dataset.qid] = input.value;
+            });
+
+            // 2. Recolectar y reconstruir palabras del crucigrama
+            worksheetData.forEach(section => {
+                if(section.type === 'crossword') {
+                    section.cwWords.forEach(w => {
+                        let wordAns = '';
+                        for(let i=0; i<w.text.length; i++){
+                            let r = w.dir === 'A' ? w.row : w.row + i;
+                            let c = w.dir === 'A' ? w.col + i : w.col;
+                            let input = document.querySelector(`.cw-cell[data-r="${r}"][data-c="${c}"]`);
+                            wordAns += (input && input.value) ? input.value : ' ';
+                        }
+                        newAnswers[w.id] = wordAns;
+                    });
+                }
+            });
+
+            const code = appState.currentCode || generateCode();
+            const db = getDB();
+            
+            db[code] = {
+                studentName: nameInput,
+                answers: newAnswers,
+                feedback: appState.feedback,
+                status: 'pending',
+                date: new Date().toLocaleDateString()
+            };
+            
+            saveDB(db);
+            appState.currentCode = code;
+            setView('success', 'student');
+        }
+
+        function toggleGrade(qId, isCorrect) {
+            if (!appState.feedback[qId]) appState.feedback[qId] = {};
+            appState.feedback[qId].correct = isCorrect;
+            saveCommentsFromDOM();
+            render();
+        }
+
+        function saveCommentsFromDOM() {
+            const comments = document.querySelectorAll('.teacher-comment');
+            comments.forEach(c => {
+                const qId = c.dataset.qid;
+                if (!appState.feedback[qId]) appState.feedback[qId] = {};
+                appState.feedback[qId].comment = c.value;
+            });
+        }
+
+        function teacherSave(newStatus) {
+            saveCommentsFromDOM(); 
+            const db = getDB();
+            db[appState.currentCode].feedback = appState.feedback;
+            db[appState.currentCode].status = newStatus;
+            saveDB(db);
+            
+            alert(newStatus === 'approved' ? '¡Trabajo Aprobado!' : 'Trabajo regresado con correcciones.');
+            setView('teacherPanel', 'teacher');
+        }
+
+        function clearWorkspace() {
+            appState.currentCode = null;
+            appState.studentName = '';
+            appState.answers = {};
+            appState.feedback = {};
+            appState.status = 'new';
+        }
+
+        // ==========================================
+        // 5. RENDERIZADO DE VISTAS (UI)
+        // ==========================================
+        const appDiv = document.getElementById('app');
+
+        function render() {
+            let html = '';
+            
+            // --- NAV BAR ---
+            const navbar = `
+                <div class="bg-navy-900 text-white shadow-md">
+                    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-earth-americas text-2xl text-gold-500"></i>
+                            <div>
+                                <h1 class="text-xl font-bold tracking-wider">PLANET ENGLISH</h1>
+                                <p class="text-xs text-navy-100">Personal English for All</p>
+                            </div>
+                        </div>
+                        ${appState.view !== 'home' ? `<button onclick="setView('home')" class="text-sm font-bold text-navy-100 hover:text-white"><i class="fa-solid fa-arrow-left"></i> Volver al Inicio</button>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // --- VISTAS ---
+            if (appState.view === 'home') {
+                html += `
+                    <div class="min-h-[80vh] flex flex-col items-center justify-center p-6">
+                        <div class="max-w-lg w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                            <div class="bg-navy-900 p-8 text-center">
+                                <i class="fa-solid fa-graduation-cap text-5xl text-gold-500 mb-4"></i>
+                                <h2 class="text-3xl font-bold text-white">Digital Worksheets</h2>
+                                <p class="text-navy-100 mt-2">Book 3 - Lessons 9 & 10</p>
+                            </div>
+                            <div class="p-8 space-y-4">
+                                <button onclick="setView('studentMenu', 'student')" class="w-full block bg-white border-2 border-navy-900 text-navy-900 hover:bg-navy-50 font-bold py-4 rounded-xl transition text-lg shadow-sm">
+                                    <i class="fa-solid fa-user-graduate mr-2"></i> Soy Estudiante
+                                </button>
+                                <button onclick="setView('teacherLogin', 'teacher')" class="w-full block bg-navy-900 hover:bg-navy-800 text-white font-bold py-4 rounded-xl transition text-lg shadow-md">
+                                    <i class="fa-solid fa-chalkboard-user mr-2"></i> Acceso Profesores
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } 
+            else if (appState.view === 'studentMenu') {
+                html += `
+                    <div class="max-w-md mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+                        <h2 class="text-2xl font-bold text-navy-900 mb-6 text-center">Área del Estudiante</h2>
+                        
+                        <button onclick="clearWorkspace(); setView('worksheet', 'student');" class="w-full bg-gold-500 hover:bg-yellow-500 text-navy-900 font-bold py-4 rounded-xl shadow-md transition mb-6 text-lg">
+                            <i class="fa-solid fa-pen mr-2"></i> Comenzar Nueva Actividad
+                        </button>
+                        
+                        <div class="relative flex items-center py-4">
+                            <div class="flex-grow border-t border-gray-300"></div>
+                            <span class="flex-shrink-0 mx-4 text-gray-400 font-bold text-sm">O CONTINUAR TRABAJO</span>
+                            <div class="flex-grow border-t border-gray-300"></div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Ingresa tu código de seguimiento:</label>
+                            <input type="text" id="studentSearchCode" class="w-full border-2 border-gray-300 rounded-xl p-3 text-center uppercase text-xl font-bold tracking-widest focus:border-navy-900 focus:outline-none" placeholder="Ej: A1B2C">
+                            <button onclick="loadSubmission(document.getElementById('studentSearchCode').value, 'student')" class="w-full mt-3 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition">
+                                Buscar Mi Trabajo
+                            </button>
+                            ${appState.errorMsg ? `<p class="text-red-500 text-center mt-3 font-bold"><i class="fa-solid fa-circle-exclamation"></i> ${appState.errorMsg}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            else if (appState.view === 'teacherLogin') {
+                html += `
+                    <div class="max-w-sm mx-auto mt-20 p-8 bg-white rounded-2xl shadow-lg border-t-8 border-navy-900">
+                        <div class="text-center mb-6">
+                            <i class="fa-solid fa-lock text-4xl text-navy-900 mb-2"></i>
+                            <h2 class="text-2xl font-bold text-navy-900">Panel Docente</h2>
+                        </div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">PIN de Acceso:</label>
+                        <input type="password" id="teacherPin" value="12345" class="w-full border-2 border-gray-300 rounded-xl p-3 text-center text-2xl tracking-widest focus:border-navy-900 focus:outline-none" placeholder="***">
+                        <button onclick="teacherLogin()" class="w-full mt-6 bg-navy-900 hover:bg-navy-800 text-white font-bold py-3 rounded-xl transition">
+                            Entrar
+                        </button>
+                        ${appState.errorMsg ? `<p class="text-red-500 text-center mt-3 font-bold">${appState.errorMsg}</p>` : ''}
+                    </div>
+                `;
+            }
+            else if (appState.view === 'teacherPanel') {
+                const db = getDB();
+                const submissions = Object.keys(db).map(key => ({ code: key, ...db[key] }));
+
+                html += `
+                    <div class="max-w-4xl mx-auto mt-10 p-6 space-y-8">
+                        <div class="bg-white p-8 rounded-2xl shadow-md border-l-8 border-gold-500 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-2xl font-bold text-navy-900">Dashboard del Profesor</h2>
+                                <p class="text-gray-600">Revisa y califica las worksheets de tus alumnos.</p>
+                            </div>
+                            <i class="fa-solid fa-chalkboard-user text-4xl text-gray-200"></i>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl shadow-md">
+                            <h3 class="text-lg font-bold mb-4">Buscar por Código</h3>
+                            <div class="flex gap-4">
+                                <input type="text" id="teacherSearchCode" class="flex-grow border-2 border-gray-300 rounded-xl p-3 uppercase text-lg font-bold tracking-widest focus:border-navy-900 focus:outline-none" placeholder="CÓDIGO (Ej: X9B1A)">
+                                <button onclick="loadSubmission(document.getElementById('teacherSearchCode').value, 'teacher')" class="bg-navy-900 hover:bg-navy-800 text-white px-8 font-bold rounded-xl transition">
+                                    <i class="fa-solid fa-magnifying-glass"></i> Buscar
+                                </button>
+                            </div>
+                            ${appState.errorMsg ? `<p class="text-red-500 mt-3 font-bold">${appState.errorMsg}</p>` : ''}
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl shadow-md">
+                            <h3 class="text-lg font-bold mb-4 border-b pb-2">Trabajos Recientes</h3>
+                            ${submissions.length === 0 ? '<p class="text-gray-500 italic">Aún no hay trabajos enviados.</p>' : `
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="bg-navy-50 text-navy-900">
+                                                <th class="p-3 font-bold">Código</th>
+                                                <th class="p-3 font-bold">Alumno</th>
+                                                <th class="p-3 font-bold">Estado</th>
+                                                <th class="p-3 font-bold">Fecha</th>
+                                                <th class="p-3 font-bold">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${submissions.reverse().map(sub => `
+                                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                                    <td class="p-3 font-bold text-gray-700">${sub.code}</td>
+                                                    <td class="p-3">${sub.studentName}</td>
+                                                    <td class="p-3">
+                                                        ${sub.status === 'pending' ? '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md text-xs font-bold">Pendiente</span>' : ''}
+                                                        ${sub.status === 'returned' ? '<span class="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-bold">Regresado</span>' : ''}
+                                                        ${sub.status === 'approved' ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-md text-xs font-bold">Aprobado</span>' : ''}
+                                                    </td>
+                                                    <td class="p-3 text-sm text-gray-500">${sub.date}</td>
+                                                    <td class="p-3">
+                                                        <button onclick="loadSubmission('${sub.code}', 'teacher')" class="text-navy-900 hover:text-gold-500 font-bold underline text-sm">Revisar</button>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+            else if (appState.view === 'worksheet') {
+                const isTeacher = appState.role === 'teacher';
+                const isApproved = appState.status === 'approved';
+                const isReturned = appState.status === 'returned' && !isTeacher;
+
+                html += `
+                    <div class="max-w-4xl mx-auto mt-8 mb-20 p-4 space-y-6">
+                        
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-2xl font-black text-navy-900">Worksheet A (L. 9-10)</h2>
+                                ${appState.currentCode ? `<p class="text-sm text-gray-500 font-bold mt-1">Código: <span class="bg-gray-100 px-2 py-1 rounded border">${appState.currentCode}</span></p>` : ''}
+                            </div>
+                            <div>
+                                ${isApproved ? '<span class="bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded-lg font-bold"><i class="fa-solid fa-check-circle mr-1"></i> Aprobado</span>' : ''}
+                                ${isReturned ? '<span class="bg-red-100 border border-red-300 text-red-800 px-4 py-2 rounded-lg font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Requiere Corrección</span>' : ''}
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Student Full Name:</label>
+                            <input type="text" id="studentName" value="${appState.studentName}" ${isTeacher || isApproved ? 'disabled' : ''} class="w-full border-b-2 border-gray-300 focus:border-navy-900 p-2 text-xl font-bold bg-transparent outline-none disabled:text-gray-500 disabled:border-transparent" placeholder="Enter your name...">
+                        </div>
+
+                        <div class="space-y-8">
+                            ${worksheetData.map(section => {
+                                let questionHtml = '';
+
+                                // --- 🧩 RENDERIZADO ESPECIAL DEL CRUCIGRAMA 🧩 ---
+                                if (section.type === 'crossword') {
+                                    // 1. Mapear celdas ocupadas
+                                    let gridMap = {};
+                                    section.cwWords.forEach(w => {
+                                        for(let i=0; i<w.text.length; i++){
+                                            let r = w.dir === 'A' ? w.row : w.row + i;
+                                            let c = w.dir === 'A' ? w.col + i : w.col;
+                                            let key = r + '_' + c;
+                                            if(!gridMap[key]) gridMap[key] = { expected: w.text[i], words: [], num: null };
+                                            gridMap[key].words.push(w.id);
+                                            if(i === 0) gridMap[key].num = w.num;
+                                        }
+                                    });
+
+                                    // 2. Construir HTML de la cuadrícula
+                                    let gridHtml = `<div class="mx-auto w-max bg-gray-400 p-[2px] shadow-inner mb-8 rounded-sm" style="display: grid; grid-template-columns: repeat(16, 38px); grid-template-rows: repeat(14, 38px); gap: 1px;">`;
+                                    
+                                    let keys = Object.keys(gridMap).sort((a,b) => {
+                                        let [ra, ca] = a.split('_').map(Number);
+                                        let [rb, cb] = b.split('_').map(Number);
+                                        return ra !== rb ? ra - rb : ca - cb;
+                                    });
+
+                                    keys.forEach(key => {
+                                        let [r, c] = key.split('_');
+                                        let cell = gridMap[key];
+                                        let firstWordId = cell.words;
+                                        let firstWordDef = section.cwWords.find(w => w.id === firstWordId);
+                                        let charIndex = firstWordDef.dir === 'A' ? c - firstWordDef.col : r - firstWordDef.row;
+                                        let submittedWord = appState.answers[firstWordId] || '';
+                                        let val = submittedWord[charIndex] || '';
+
+                                        gridHtml += `
+                                            <div style="grid-row: ${r}; grid-column: ${c};" class="relative bg-white border border-gray-200">
+                                                ${cell.num ? `<span class="absolute top-[1px] left-[3px] text-[0.65rem] font-bold text-gray-800 leading-none">${cell.num}</span>` : ''}
+                                                <input type="text" maxlength="1" data-r="${r}" data-c="${c}" value="${val}" ${isTeacher || isApproved ? 'disabled' : ''}
+                                                       class="cw-cell w-full h-full text-center uppercase font-black text-xl text-navy-900 focus:bg-gold-500 focus:text-white outline-none border-none p-0 cursor-text disabled:bg-gray-100 disabled:text-navy-700 transition-colors"
+                                                       onkeyup="handleCwInput(this, event)">
+                                            </div>
+                                        `;
+                                    });
+                                    gridHtml += `</div>`;
+
+                                    // 3. Construir lista de Clues (Definiciones y Botones de Calificación)
+                                    let cluesHtml = `<div class="grid md:grid-cols-2 gap-8">`;
+                                    ['Across', 'Down'].forEach(dir => {
+                                        cluesHtml += `<div>
+                                            <h4 class="font-black text-xl text-gold-500 mb-4 uppercase tracking-wider border-b-2 border-navy-100 pb-2">
+                                                <i class="fa-solid ${dir === 'Across' ? 'fa-arrow-right' : 'fa-arrow-down'} mr-2"></i> ${dir}
+                                            </h4>
+                                            <div class="space-y-4">`;
+                                        
+                                        let dirClues = section.cwWords.filter(w => w.dir === dir);
+                                        dirClues.forEach(clue => {
+                                            let fb = appState.feedback[clue.id] || {};
+                                            let isC = fb.correct === true;
+                                            let isX = fb.correct === false;
+                                            let clueTextClass = isC ? 'text-green-700' : isX ? 'text-red-700' : 'text-gray-700';
+                                            
+                                            cluesHtml += `<div class="p-4 rounded-xl border-2 ${isC ? 'bg-green-50 border-green-200' : isX ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}">`;
+                                            cluesHtml += `<p class="font-bold ${clueTextClass} mb-3">${clue.num}. ${clue.clue}</p>`;
+                                            
+                                            if(isTeacher) {
+                                                cluesHtml += `
+                                                    <div class="flex gap-2 mb-2">
+                                                        <button onclick="toggleGrade('${clue.id}', true)" class="px-3 py-1 rounded text-sm font-bold border ${isC ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-500 hover:bg-gray-100'}"><i class="fa-solid fa-check"></i> Correcto</button>
+                                                        <button onclick="toggleGrade('${clue.id}', false)" class="px-3 py-1 rounded text-sm font-bold border ${isX ? 'bg-red-500 text-white border-red-600' : 'bg-white text-gray-500 hover:bg-gray-100'}"><i class="fa-solid fa-xmark"></i> Incorrecto</button>
+                                                    </div>
+                                                    ${isX ? `<input type="text" data-qid="${clue.id}" class="teacher-comment w-full border border-red-300 rounded p-2 text-sm mt-1 focus:outline-none" placeholder="Escribe un comentario..." value="${fb.comment || ''}">` : ''}
+                                                `;
+                                            } else {
+                                                if(isC) cluesHtml += `<span class="text-green-600 font-bold text-sm bg-white p-1 px-2 rounded-md border"><i class="fa-solid fa-check-circle mr-1"></i> ¡Correcto!</span>`;
+                                                if(isX && fb.comment) cluesHtml += `<div class="mt-2 text-red-700 bg-red-100 p-2 rounded text-sm font-bold border-l-4 border-red-500"><i class="fa-solid fa-comment-dots mr-1"></i> Teacher: ${fb.comment}</div>`;
+                                            }
+                                            cluesHtml += `</div>`;
+                                        });
+                                        cluesHtml += `</div></div>`;
+                                    });
+                                    cluesHtml += `</div>`;
+
+                                    // Ensamblar Cuadrícula + Definiciones
+                                    questionHtml = `<div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 overflow-hidden">`;
+                                    questionHtml += `
+                                        <div class="border-b-2 border-gold-500 pb-2 mb-6">
+                                            <h3 class="text-lg font-bold text-navy-900">${section.title}</h3>
+                                            ${section.subtitle ? `<p class="text-sm font-medium text-gray-500 mt-1">${section.subtitle}</p>` : ''}
+                                        </div>
+                                    `;
+                                    questionHtml += `<div class="overflow-x-auto pb-4">${gridHtml}</div>${cluesHtml}</div>`;
+                                } 
+                                // --- RENDERIZADO ESTÁNDAR (Otras preguntas) ---
+                                else {
+                                    questionHtml = `
+                                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                            <div class="border-b-2 border-gold-500 pb-2 mb-6">
+                                                <h3 class="text-lg font-bold text-navy-900">${section.title}</h3>
+                                                ${section.subtitle ? `<p class="text-sm font-medium text-gray-500 mt-1">${section.subtitle}</p>` : ''}
+                                            </div>
+                                            <div class="space-y-6">
+                                                ${section.questions.map(q => {
+                                                    const ans = appState.answers[q.id] || '';
+                                                    const fb = appState.feedback[q.id] || {};
+                                                    const isC = fb.correct === true;
+                                                    const isX = fb.correct === false;
+                                                    
+                                                    let boxStyle = "border-gray-200 bg-gray-50";
+                                                    if (isC) boxStyle = "border-green-300 bg-green-50";
+                                                    if (isX) boxStyle = "border-red-300 bg-red-50";
+
+                                                    return `
+                                                        <div class="p-4 rounded-xl border-2 ${boxStyle} transition">
+                                                            <p class="font-bold text-gray-800 mb-3">${q.label}</p>
+                                                            
+                                                            ${isTeacher ? `
+                                                                <div class="bg-white p-3 rounded border border-gray-300 text-gray-700 font-medium mb-3">
+                                                                    ${ans ? ans : '<span class="text-gray-400 italic">Sin respuesta</span>'}
+                                                                </div>
+                                                                <div class="flex gap-2 mb-2">
+                                                                    <button onclick="toggleGrade('${q.id}', true)" class="px-3 py-1 rounded text-sm font-bold border ${isC ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-500 hover:bg-gray-100'}"><i class="fa-solid fa-check"></i> Correcto</button>
+                                                                    <button onclick="toggleGrade('${q.id}', false)" class="px-3 py-1 rounded text-sm font-bold border ${isX ? 'bg-red-500 text-white border-red-600' : 'bg-white text-gray-500 hover:bg-gray-100'}"><i class="fa-solid fa-xmark"></i> Incorrecto</button>
+                                                                </div>
+                                                                ${isX ? `<input type="text" data-qid="${q.id}" class="teacher-comment w-full border border-red-300 rounded p-2 text-sm mt-1 focus:outline-none" placeholder="Escribe un comentario o pista..." value="${fb.comment || ''}">` : ''}
+                                                            ` : `
+                                                                <div class="relative">
+                                                                    <input type="text" data-qid="${q.id}" value="${ans}" ${isC || isApproved ? 'disabled' : ''} class="student-answer w-full border-2 rounded-lg p-3 outline-none transition font-medium ${isC ? 'border-green-400 text-green-700 bg-white' : isX ? 'border-red-400 focus:border-red-600' : 'border-gray-300 focus:border-navy-500'}" placeholder="Your answer...">
+                                                                    ${isC ? '<i class="fa-solid fa-check absolute right-4 top-4 text-green-500 text-xl"></i>' : ''}
+                                                                    ${isX ? '<i class="fa-solid fa-xmark absolute right-4 top-4 text-red-500 text-xl"></i>' : ''}
+                                                                </div>
+                                                                ${(isX && fb.comment) ? `<div class="mt-2 text-red-700 bg-red-100/50 p-2 rounded text-sm font-bold border-l-4 border-red-500"><i class="fa-solid fa-comment-dots mr-1"></i> Teacher: ${fb.comment}</div>` : ''}
+                                                            `}
+                                                        </div>
+                                                    `;
+                                                }).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+
+                                return questionHtml;
+                            }).join('')}
+                        </div>
+
+                        ${(!isApproved || isTeacher) ? `
+                            <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-50">
+                                <div class="max-w-4xl mx-auto flex gap-4 justify-end">
+                                    ${isTeacher ? `
+                                        <button onclick="teacherSave('returned')" class="bg-red-100 hover:bg-red-200 border-2 border-red-500 text-red-700 font-bold py-3 px-6 rounded-xl transition">
+                                            <i class="fa-solid fa-rotate-left"></i> Regresar a Estudiante
+                                        </button>
+                                        <button onclick="teacherSave('approved')" class="bg-green-500 hover:bg-green-600 border-b-4 border-green-700 text-white font-bold py-3 px-8 rounded-xl transition">
+                                            Aprobar Trabajo <i class="fa-solid fa-check-double"></i>
+                                        </button>
+                                    ` : `
+                                        <button onclick="submitStudentWork()" class="bg-navy-900 hover:bg-navy-800 border-b-4 border-navy-950 text-white font-bold py-3 px-10 rounded-xl transition w-full sm:w-auto text-lg">
+                                            ${isReturned ? '<i class="fa-solid fa-paper-plane mr-2"></i> Reenviar Correcciones' : '<i class="fa-solid fa-paper-plane mr-2"></i> Enviar Trabajo'}
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            else if (appState.view === 'success') {
+                html += `
+                    <div class="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
+                        <div class="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full border-t-8 border-gold-500">
+                            <i class="fa-solid fa-circle-check text-6xl text-green-500 mb-6"></i>
+                            <h2 class="text-3xl font-black text-navy-900 mb-2">¡Enviado!</h2>
+                            <p class="text-gray-600 mb-6">Tu profesor ya puede revisar tu worksheet.</p>
+                            
+                            <div class="bg-gray-100 border-2 border-dashed border-gray-300 p-6 rounded-xl mb-6">
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">CÓDIGO DE SEGUIMIENTO</p>
+                                <p class="text-4xl font-black text-navy-900 tracking-widest">${appState.currentCode}</p>
+                            </div>
+
+                            <p class="text-sm bg-yellow-50 text-yellow-800 p-3 rounded-lg border border-yellow-200 font-medium mb-6">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Anota este código. Lo necesitarás para ver tu calificación o correcciones.
+                            </p>
+
+                            <button onclick="setView('home')" class="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3 rounded-xl transition">
+                                Volver al Inicio
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            appDiv.innerHTML = navbar + html;
+            window.scrollTo(0,0);
+        }
+
+        render();
+
+    </script>
+</body>
+</html>
